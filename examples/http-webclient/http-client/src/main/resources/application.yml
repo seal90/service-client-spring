@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: http-client-webclient
+
+server:
+  port: 8081
+
+seal:
+  spring:
+    service-client:
+      http:
+        forward-web-headers:
+          - overlay-ns
+        default-channel-name: "default-channel-name"
+        channels:
+          CHANNEL-NAME:
+            address: https://www.github.com
+            addresses:
+              - https://www.github.com
+              - https://www.github.io
+        services:
+          SERVICE-NAME:
+            channel-name: CHANNEL-NAME
+            channel-config:
+              addresses:
+                - https://www.github.com
+                - https://www.github.io

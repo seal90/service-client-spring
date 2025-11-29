@@ -1,0 +1,5 @@
+seal:
+  spring:
+    http-spring:
+      proxy-web-headers:
+        - overlay-ns-default

@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: http-client-feign
+  cloud:
+    openfeign:
+      client:
+        config:
+          feignServer:
+            url: http://127.0.0.1:8080/
+            loggerLevel: FULL
+
+server:
+  port: 8081
+

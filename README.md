@@ -105,9 +105,11 @@ To invoke a target service, the caller must explicitly specify the following fou
 
 # Supported Protocols
 
-- GRPC
-- HTTP
-- HTTP_FEIGN
+* gRPC
+* HTTP
+* RSocket
+* HTTP by Feign
+* MQTT by Eclipse
 
 # Core Feature Overview
 
@@ -131,7 +133,7 @@ To implicitly propagate contextual information—such as user identity or region
 - **Execution Timing**: Handled by a separate interceptor, ordered via `AnnotationAwareOrderComparator` with priority **`order = 10`**, ensuring headers are injected after address resolution but before the actual remote call is made.
 - **Configurability**: The list of headers to propagate can be customized via the following configuration property:
   ```yaml
-  seal.spring.service-client.http.forward-web-headers: []
+  seal.spring.service-client.http.forward-metadata: []
   ```
   By default, this list is empty, meaning no headers are automatically forwarded. To enable propagation, simply specify the desired header names (e.g., `["Authorization", "X-Trace-ID"]`).
 
@@ -159,7 +161,7 @@ seal:
     service-client:
       default-protocol: grpc
       grpc:
-        forward-grpc-metadata:
+        forward-metadata:
           - overlay-ns
         default-channel-config:
           load-balancing-policy: "round_robin"
@@ -178,9 +180,7 @@ seal:
         default-channel-name:
         channels:
           CHANNEL-NAME:
-            addresses:
-              - ip:port
-              - ip:port
+            address: "ip:port"
             load-balancing-policy: "round_robin"
             negotiation-type: PLAINTEXT # TLS, PLAINTEXT_UPGRADE, PLAINTEXT;
             enable-keep-alive: false
@@ -193,21 +193,19 @@ seal:
             user-agent:
             default-deadline:
             secure: false
-            ssl-bundle: ""              
+            ssl-bundle: ""
         services:
           SERVICE-NAME:
             channel-name:
             channel-config:
-              addresses:
-                - ip:port
-                - ip:port
+              address: "ip:port"
 ---
 
 seal:
   spring: 
     service-client:
       http-spring:
-        forward-web-headers: # Forward the HTTP request headers from the web server 
+        forward-metadata: # Forward the HTTP request headers from the web server 
           - overlay-ns
 #        default-channel-config:
         default-channel-name:
@@ -243,15 +241,12 @@ seal:
 * gRPC Example: [grpc](examples/grpc)
 * HTTP WebClient Example: [http-webclient](examples/http-webclient)
 * HTTP RestTemplate Example: [http-resttemplate](examples/http-resttemplate)
+* RSocket Example: [rsocket](examples/rsocket)
+* MQTT Eclipse Example[mqtt-eclipse](examples/mqtt-eclipse)
 * HTTP Feign Example: [http-feign](examples/http-feign)
 
 # TODO
 
-- **Unified gRPC Configuration Loading Mechanism**  
-  Provide a standardized approach to load and parse gRPC client/server configurations—such as timeouts, interceptors, and channel parameters—with dynamic injection support from `application.yml` or external configuration sources, eliminating hard-coded values.
-
-- **Enhanced Extensibility for gRPC Clients**  
-  Inspired by the fluent and customizable design of `WebClient.Builder`, introduce a flexible Builder pattern for gRPC clients that enables on-demand registration of interceptors, adjustment of connection policies, codec swapping, and more—improving both developer experience and runtime control.
-
-- **Refactored Dependency Management via a Dedicated Starter**  
-  Introduce a standalone Spring Boot Starter (e.g., `seal-spring-boot-starter-grpc`) that encapsulates all gRPC-related dependencies, auto-configuration classes, and default behaviors. This delivers an "out-of-the-box" experience while preventing version conflicts and transitive dependency pollution.
+- Complete the TODOs in the code.
+- **Context class for forward metadata** support http server or mq consumer and so on
+- **Register beans via YAML configuration?**

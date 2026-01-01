@@ -1,0 +1,15 @@
+spring.application.name: mqtt-eclipse-client
+
+seal:
+  spring:
+    service-client:
+      mqtt-eclipse:
+        services:
+          mqtt-moquette-server:
+            channel-config:
+              serverURIs:
+                - 'tcp://127.0.0.1:1883'
+              clientId: ${spring.application.name}-${random.value}
+              userName: admin
+              password: yourpassword
+              defaultTopic: default

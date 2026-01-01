@@ -17,6 +17,8 @@
 		<module>http-resttemplate</module>
 		<module>http-webclient</module>
 		<module>http-feign</module>
+		<module>rsocket</module>
+		<module>mqtt-eclipse</module>
 	</modules>
 
 	<build>

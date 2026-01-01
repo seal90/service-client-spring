@@ -1,5 +1,6 @@
 package io.github.seal90.grpc_client;
 
+import io.github.seal90.serviceclient.core.ServiceClientInterceptor;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
@@ -11,17 +12,16 @@ import io.grpc.MethodDescriptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.grpc.client.GlobalClientInterceptor;
 
-import static io.github.seal90.serviceclient.protocoltypefactory.GrpcProtocolTypeFactory.CHANNEL_NAME_KEY;
-import static io.github.seal90.serviceclient.protocoltypefactory.GrpcProtocolTypeFactory.SERVICE_NAME_KEY;
+import static io.github.seal90.serviceclient.grpc.protocoltypefactory.ProtocolTypeGrpcFactory.CHANNEL_NAME_KEY;
+import static io.github.seal90.serviceclient.grpc.protocoltypefactory.ProtocolTypeGrpcFactory.SERVICE_NAME_KEY;
 
 @Slf4j
 @Configuration(proxyBeanMethods = false)
 public class GrpcClientConfiguration {
 
   @Bean
-  @GlobalClientInterceptor
+  @ServiceClientInterceptor
   public ClientInterceptor clientInterceptor() {
     return new ClientInterceptor() {
       @Override

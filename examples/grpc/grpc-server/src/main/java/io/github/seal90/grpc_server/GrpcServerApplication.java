@@ -10,5 +10,4 @@ public class GrpcServerApplication {
 		SpringApplication.run(GrpcServerApplication.class, args);
 	}
 
-
 }

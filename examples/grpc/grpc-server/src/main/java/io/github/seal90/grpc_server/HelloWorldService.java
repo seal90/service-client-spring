@@ -1,6 +1,7 @@
 package io.github.seal90.grpc_server;
 
-import io.github.seal90.serviceclient.ServiceClient;
+import io.github.seal90.serviceclient.core.ChannelNamePrefix;
+import io.github.seal90.serviceclient.core.ServiceClient;
 import io.github.seal90.serviceclient.proto.HelloReply;
 import io.github.seal90.serviceclient.proto.HelloRequest;
 import io.github.seal90.serviceclient.proto.HelloWorldServiceGrpc;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class HelloWorldService extends HelloWorldServiceGrpc.HelloWorldServiceImplBase {
 
-  @ServiceClient(serviceName = "HelloWorldService")
+  @ServiceClient(serviceName = "grpc-server", channelName = ChannelNamePrefix.STATIC_PREFIX+"dns:///127.0.0.1:9090")
   private HelloWorldServiceGrpc.HelloWorldServiceBlockingStub stub;
 
   @Override

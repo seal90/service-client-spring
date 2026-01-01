@@ -99,9 +99,12 @@
 ```
 
 # 实现的协议
-* GRPC
+
+* gRPC
 * HTTP
-* HTTP_FEIGN
+* RSocket
+* HTTP by Feign
+* MQTT by Eclipse
 
 # 核心功能说明
 
@@ -125,7 +128,7 @@
 - **执行时机**：由独立拦截器实现，使用 `AnnotationAwareOrderComparator` 排序，优先级设为 **`order = 10`**，确保在地址解析完成后、实际发起远程调用前注入所需 Header。
 - **可配置性**：通过如下配置项自定义需透传的 Header 列表：
   ```yaml
-  seal.spring.service-client.http.forward-web-headers: []
+  seal.spring.service-client.http.forward-metadata: []
   ```
   默认为空列表，表示不自动透传任何 Header；按需填入 header 名称（例如 `["Authorization", "X-Trace-ID"]`）即可启用透传。
 
@@ -153,7 +156,7 @@ seal:
     service-client:
       default-protocol: grpc
       grpc:
-        forward-grpc-metadata:
+        forward-metadata:
           - overlay-ns
         default-channel-config:
           load-balancing-policy: "round_robin"
@@ -201,9 +204,8 @@ seal:
   spring: 
     service-client:
       http-spring:
-        forward-web-headers: # Forward the HTTP request headers from the web server 
+        forward-metadata: # Forward the HTTP request headers from the web server 
           - overlay-ns
-#        default-channel-config:
         default-channel-name:
         channels:
           CHANNEL-NAME:
@@ -217,7 +219,6 @@ seal:
 #            read-timeout: 10s
 #            # call-timeout write-timeout
 #            ssl-bundle: ""
-
         services:
           SERVICE-NAME:
             channel-name:
@@ -237,15 +238,12 @@ seal:
 * gRPC Example: [grpc](examples/grpc)
 * HTTP WebClient Example: [http-webclient](examples/http-webclient)
 * HTTP RestTemplate Example: [http-resttemplate](examples/http-resttemplate)
+* RSocket Example: [rsocket](examples/rsocket)
+* MQTT Eclipse Example[mqtt-eclipse](examples/mqtt-eclipse)
 * HTTP Feign Example: [http-feign](examples/http-feign)
 
 # TODO
 
-- **统一 gRPC 配置读取机制**  
-  提供标准化方式加载和解析 gRPC 客户端/服务端配置（如超时、拦截器、通道参数等），支持从 `application.yml` 或外部配置源动态注入，避免硬编码。
-
-- **增强 gRPC 客户端可扩展性**  
-  借鉴 `WebClient.Builder` 的链式构建与定制化设计，为 gRPC 客户端提供灵活的 Builder 模式，支持按需注册拦截器、调整连接策略、切换编解码器等，提升开发体验与运行时控制能力。
-
-- **重构依赖管理，推出专用 Starter**  
-  例如创建独立的 Spring Boot Starter（如 `seal-spring-boot-starter-grpc`），封装 gRPC 相关依赖、自动配置类和默认行为，实现“开箱即用”，同时避免版本冲突与传递依赖污染。
+- 完成代码中的 TODO
+- 上下文类用于传递头信息，支持http server , mq consumer 和其他的
+- **通过yaml配置注册对象？**

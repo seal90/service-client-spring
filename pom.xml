@@ -26,6 +26,7 @@
 	<modules>
 		<module>service-client-spring</module>
 		<module>examples</module>
+		<module>simulate-thirdparty-implementation</module>
 	</modules>
 	
 	<dependencyManagement>
@@ -47,6 +48,36 @@
 			<dependency>
 				<groupId>io.github.seal90</groupId>
 				<artifactId>service-client-spring</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.seal90</groupId>
+				<artifactId>service-client-core</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.seal90</groupId>
+				<artifactId>service-client-grpc</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.seal90</groupId>
+				<artifactId>service-client-http</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.seal90</groupId>
+				<artifactId>service-client-rsocket</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.seal90</groupId>
+				<artifactId>service-client-http-feign</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.seal90</groupId>
+				<artifactId>service-client-mqtt-eclipse</artifactId>
 				<version>0.0.1-SNAPSHOT</version>
 			</dependency>
 		</dependencies>

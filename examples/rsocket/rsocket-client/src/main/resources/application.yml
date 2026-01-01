@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: rsocket-client
+  rsocket:
+    server:
+      port: 7000
+
+#logging:
+#  level:
+#    io.rsocket.FrameLogger: DEBUG
+#    io.rsocket: DEBUG
+
+seal:
+  spring:
+    service-client:
+      rsocket:
+#        default-channel-name: "default-channel-name"
+        channels:
+          rsocket-server-channel:
+            address: "127.0.0.1:9898"
+        services:
+          rsocket-server:
+            channel-name: rsocket-server-channel
+            rSocketMessageHandlerBeanNames:
+              - helloRSocketServer2ClientFacadeImpl

@@ -1,0 +1,10 @@
+spring.application.name: grpc-client
+
+seal:
+  spring:
+    service-client:
+      grpc:
+        services:
+          grpc-server:
+            channel-config:
+              address: 'dns:///127.0.0.1:9090'

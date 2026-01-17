@@ -47,8 +47,8 @@
     用于注入自定义拦截逻辑，常见用途包括：请求头处理、认证令牌注入、调用日志记录等。  
     在拦截器中，可通过以下常量从请求上下文（attributes）中获取注解元信息：
 
-  - `ProtocolClientAnnotationBeanPostProcessor.SERVICE_NAME` → 获取 `serviceName`
-  - `ProtocolClientAnnotationBeanPostProcessor.CHANNEL_NAME` → 获取 `channelName`
+  - `ServiceClientAnnotationBeanPostProcessor.SERVICE_NAME` → 获取 `serviceName`
+  - `ServiceClientAnnotationBeanPostProcessor.CHANNEL_NAME` → 获取 `channelName`
 
 # ServiceClient 使用
 
@@ -94,7 +94,7 @@
    使用自定义 HTTP 客户端发起请求，适用于需要精细控制连接、拦截器或协议细节的高级场景。
 
 ```java
-	@ProtocolClient(serviceName = "HelloWorldService", channelName="context://myBean")
+	@ServiceClient(serviceName = "HelloWorldService", channelName="context://myBean")
 	private HelloWorldServiceGrpc.HelloWorldServiceBlockingStub stub;
 ```
 
@@ -247,3 +247,10 @@ seal:
 - 完成代码中的 TODO
 - 上下文类用于传递头信息，支持http server , mq consumer 和其他的
 - **通过yaml配置注册对象？**
+  - call: interface -> channel(interceptors -> client) -> server
+    - interceptors: interceptors defined in @ServiceClient & Global interceptors
+    - client: Globally Unique
+  - channel name: Global interceptors + client
+  - The @ServiceClient annotation defines custom interceptors: interceptors defined in @ServiceClient + channel name = new channel(order(interceptors defined in @ServiceClient & Global interceptors) -> client)
+  - If the @ServiceClient annotation does not declare an interceptors element, special interfaces require an additional interceptor to process data: new channel(order(special interfaces & Global interceptors) -> client) = new channel(order(interceptors defined in @ServiceClient & Global interceptors) -> client)
+  - interceptors defined in @ServiceClient: Handling special interfaces quickly is enabled at the unavoidable cost of transparently creating a new communication channel.

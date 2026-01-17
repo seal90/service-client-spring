@@ -28,8 +28,6 @@ public class ServiceClientAnnotationBeanPostProcessor implements BeanPostProcess
 
   private ApplicationContext applicationContext;
 
-  private ServiceClientProperties serviceClientProperties;
-
   private Map<String, ProtocolTypeFactory> factoryMap;
 
   private Map<String, Object> cacheBeans = new ConcurrentHashMap<>();

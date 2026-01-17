@@ -48,8 +48,8 @@ To invoke a target service, the caller must explicitly specify the following fou
   Allows injection of custom interception logic. Common use cases include request header manipulation, authentication token injection, and call logging.  
   Within an interceptor, the following constants can be used to retrieve annotation metadata from the request context (`attributes`):
 
-    - `ProtocolClientAnnotationBeanPostProcessor.SERVICE_NAME` → retrieves the `serviceName`
-    - `ProtocolClientAnnotationBeanPostProcessor.CHANNEL_NAME` → retrieves the `channelName`
+    - `ServiceClientAnnotationBeanPostProcessor.SERVICE_NAME` → retrieves the `serviceName`
+    - `ServiceClientAnnotationBeanPostProcessor.CHANNEL_NAME` → retrieves the `channelName`
 
 # Using `@ServiceClient`
 
@@ -99,7 +99,7 @@ To invoke a target service, the caller must explicitly specify the following fou
   Leverage a custom HTTP client bean for fine-grained control over connections, interceptors, or protocol behavior in advanced use cases.
 
   ```java
-  @ProtocolClient(serviceName = "HelloWorldService", channelName = "context://myBean")
+  @ServiceClient(serviceName = "HelloWorldService", channelName = "context://myBean")
   private HelloWorldServiceGrpc.HelloWorldServiceBlockingStub stub;
   ```
 
@@ -250,3 +250,10 @@ seal:
 - Complete the TODOs in the code.
 - **Context class for forward metadata** support http server or mq consumer and so on
 - **Register beans via YAML configuration?**
+  - call: interface -> channel(interceptors -> client) -> server
+    - interceptors: interceptors defined in @ServiceClient & Global interceptors
+    - client: Globally Unique
+  - channel name: Global interceptors + client
+  - The @ServiceClient annotation defines custom interceptors: interceptors defined in @ServiceClient + channel name = new channel(order(interceptors defined in @ServiceClient & Global interceptors) -> client)
+  - If the @ServiceClient annotation does not declare an interceptors element, special interfaces require an additional interceptor to process data: new channel(order(special interfaces & Global interceptors) -> client) = new channel(order(interceptors defined in @ServiceClient & Global interceptors) -> client)
+  - interceptors defined in @ServiceClient: Handling special interfaces quickly is enabled at the unavoidable cost of transparently creating a new communication channel.

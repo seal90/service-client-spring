@@ -47,7 +47,6 @@ public class RestTemplateHttpExchangeAdapterFactory implements HttpExchangeAdapt
       return RestTemplateAdapter.create(restTemplate);
     }
 
-    // TODO Final name resolution is performed here, with full support for Spring’s dynamic configuration updates.
     List<ClientHttpRequestInterceptor> interceptorList = new ArrayList<>();
     for(String interceptorName : interceptors) {
       ClientHttpRequestInterceptor interceptor = (ClientHttpRequestInterceptor)applicationContext.getBean(interceptorName);

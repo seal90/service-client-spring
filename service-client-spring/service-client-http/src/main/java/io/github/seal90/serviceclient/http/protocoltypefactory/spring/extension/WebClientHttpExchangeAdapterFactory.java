@@ -49,7 +49,6 @@ public class WebClientHttpExchangeAdapterFactory implements HttpExchangeAdapterF
         return WebClientAdapter.create(webClient);
       }
 
-      // TODO Final name resolution is performed here, with full support for Spring’s dynamic configuration updates.
       List<ExchangeFilterFunction> exchangeFilterFunctions = new ArrayList<>();
       for(String interceptor: interceptors) {
         ExchangeFilterFunction exchangeFilterFunction = (ExchangeFilterFunction)applicationContext.getBean(interceptor);

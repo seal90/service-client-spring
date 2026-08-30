@@ -13,6 +13,9 @@
 	<packaging>pom</packaging>
 
 	<modules>
+		<module>carries-by-grpc</module>
+		<module>carries-by-rsocket</module>
+		<module>carries-http</module>
 		<module>grpc</module>
 		<module>http-resttemplate</module>
 		<module>http-webclient</module>

@@ -1,0 +1,18 @@
+spring.application.name: grpc-client
+
+seal:
+  spring:
+    service-client:
+      grpc:
+        services:
+          hello-world:
+            channel-config:
+              address: 'dns:///127.0.0.1:50051'
+      carries-by-grpc:
+        services:
+          echo:
+            channel-config:
+              address: 'dns:///127.0.0.1:50051'
+          hello-world:
+            channel-config:
+              address: 'dns:///127.0.0.1:50051'

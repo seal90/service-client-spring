@@ -1,0 +1,23 @@
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+option java_package = "io.github.seal90.carries.by.rsocket.facade";
+
+option java_multiple_files = true;
+
+service HelloWorldFacade {
+
+    rpc sayHello(HelloRequest) returns (HelloReply);
+
+    rpc mockSayHelloToOther(HelloRequest) returns (HelloReply);
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}

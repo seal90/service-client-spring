@@ -1,0 +1,52 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+
+option java_package = "io.github.seal90.serviceclient.carries.by.rsocket.context";
+
+option java_outer_classname = "Context";
+
+//option java_multiple_files = true;
+
+message RpcMetadata {
+    string key = 1;
+    google.protobuf.Any value = 2;
+}
+
+message RpcRequest {
+    string target_service_name = 1;
+    string route = 2;
+    map<string, google.protobuf.Any> metadata = 3;
+}
+
+message RpcResponse {
+    map<string, google.protobuf.Any> metadata = 1;
+}
+
+message Request {
+    map<string, google.protobuf.Any> metadata = 1;
+    google.protobuf.Any data = 2;
+}
+
+message Response {
+    map<string, google.protobuf.Any> metadata = 1;
+    google.protobuf.Any data = 2;
+}
+
+//message RPCContext {
+//    RPCRequest request = 1;
+//    RPCResponse response = 2;
+//}
+//
+//message RPCRequest {
+//    string target_service_name = 1;
+//    string route = 2;
+//    map<string, string> data_map = 3;
+//}
+//
+//message RPCResponse {
+//    map<string, string> data_map = 1;
+//}
+
+enum Constant {
+    RPCCONTEXT_METADATA_KEY = 0;
+}

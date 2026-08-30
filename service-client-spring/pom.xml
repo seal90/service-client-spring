@@ -13,6 +13,9 @@
 	<packaging>pom</packaging>
 
 	<modules>
+		<module>service-client-carries-by-grpc</module>
+		<module>service-client-carries-by-rsocket</module>
+		<module>service-client-carries-http</module>
 		<module>service-client-core</module>
 		<module>service-client-grpc</module>
 		<module>service-client-http</module>

@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: carries-by-rsocket-client
+
+
+
+seal:
+  spring:
+    service-client:
+      carries:
+        by:
+          rsocket:
+            default-channel-name: "default-channel-name"
+            channels:
+              carries-server-channel:
+                address: "127.0.0.1:9898"
+              default-channel-name:
+                address: "127.0.0.1:9898"
+            services:
+              carries-by-rsocket-server:
+                channel-name: carries-server-channel
+              mq-carries-by-rsocket:
+                channel-name: default-channel-name
+              mysql-crud-by-rsocket:
+                channel-name: default-channel-name

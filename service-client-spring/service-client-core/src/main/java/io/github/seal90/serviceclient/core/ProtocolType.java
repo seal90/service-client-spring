@@ -15,6 +15,7 @@ public interface ProtocolType {
    */
   public static final String HTTP = "HTTP";
 
+  public static final String CARRIES_HTTP = "CARRIES_HTTP";
 
   public static final String RSOCKET = "RSOCKET";
 

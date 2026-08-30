@@ -5,7 +5,7 @@ import io.github.seal90.serviceclient.core.ServiceClientInterceptor;
 import io.github.seal90.serviceclient.core.util.ApplicationContextBeanLookupUtils;
 import io.github.seal90.serviceclient.http.ProtocolTypeHttpProperties;
 import org.springframework.beans.factory.BeanCreationException;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.http.client.ClientHttpRequestInterceptor;

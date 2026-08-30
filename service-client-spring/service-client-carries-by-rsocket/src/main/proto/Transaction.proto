@@ -1,0 +1,40 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+
+option java_package = "io.github.seal90.serviceclient.carries.by.rsocket.context";
+
+option java_outer_classname = "Transaction";
+
+//option java_multiple_files = true;
+
+message GetTransactionRequest {
+  string id = 1;
+}
+
+message GetTransactionReplay {
+  string id = 1;
+}
+
+message BeginRequest {
+  string id = 1;
+}
+
+message BeginReplay {
+  string id = 1;
+}
+
+message CommitRequest {
+  string id = 1;
+}
+
+message CommitReplay {
+  string id = 1;
+}
+
+message RollbackRequest {
+  string id = 1;
+}
+
+message RollbackReplay {
+  string id = 1;
+}

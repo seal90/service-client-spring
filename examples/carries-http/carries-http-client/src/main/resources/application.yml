@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: carries-http-client
+
+server:
+  port: 8081
+
+seal:
+  spring:
+    service-client:
+      carries:
+        rsocket:
+          default-channel-name: "default-channel-name"
+          channels:
+            http-server-webclient-channel:
+              address: "127.0.0.1:9898"
+          services:
+            http-server-webclient:
+              channel-name: http-server-webclient-channel

@@ -2,8 +2,8 @@ package io.github.seal90.http_client;
 
 import io.github.seal90.serviceclient.core.ServiceClientInterceptor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.web.client.RestTemplateCustomizer;
-import org.springframework.boot.web.client.RestTemplateRequestCustomizer;
+import org.springframework.boot.restclient.RestTemplateCustomizer;
+import org.springframework.boot.restclient.RestTemplateRequestCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;

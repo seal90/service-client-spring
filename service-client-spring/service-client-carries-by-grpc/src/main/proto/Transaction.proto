@@ -1,0 +1,38 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+
+option java_package = "io.github.seal90.serviceclient.carries.by.grpc.transaction";
+
+option java_outer_classname = "Transaction";
+
+message BeginRequest {
+  string id = 1;
+}
+
+message BeginReplay {
+  string id = 1;
+}
+
+message CommitRequest {
+  string id = 1;
+}
+
+message CommitReplay {
+  string id = 1;
+}
+
+message RollbackRequest {
+  string id = 1;
+}
+
+message RollbackReplay {
+  string id = 1;
+}
+
+service CarriesByGrpcTransaction {
+  rpc DoBegin(BeginRequest) returns (BeginReplay) {}
+
+  rpc DoCommit(CommitRequest) returns (CommitReplay) {}
+
+  rpc DoRollback(RollbackRequest) returns (RollbackReplay) {}
+}

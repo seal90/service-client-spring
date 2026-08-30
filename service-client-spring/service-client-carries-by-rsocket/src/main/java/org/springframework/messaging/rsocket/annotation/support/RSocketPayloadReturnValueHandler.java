@@ -1,0 +1,190 @@
+/*
+ * Copyright 2002-2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.messaging.rsocket.annotation.support;
+
+import com.google.protobuf.Any;
+import io.github.seal90.serviceclient.carries.by.rsocket.context.CarriesConstant;
+import io.github.seal90.serviceclient.carries.by.rsocket.context.Context;
+import io.rsocket.Payload;
+import io.rsocket.metadata.WellKnownMimeType;
+import org.springframework.core.MethodParameter;
+import org.springframework.core.ReactiveAdapterRegistry;
+import org.springframework.core.codec.Encoder;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.lang.Nullable;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.handler.invocation.reactive.AbstractEncoderMethodReturnValueHandler;
+import org.springframework.messaging.rsocket.MetadataEncoder;
+import org.springframework.messaging.rsocket.PayloadUtils;
+import org.springframework.messaging.rsocket.RSocketRequester;
+import org.springframework.util.Assert;
+import org.springframework.util.MimeType;
+import org.springframework.util.MimeTypeUtils;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
+
+//import org.springframework.messaging.rsocket.MetadataEncoder;
+
+/**
+ * Extension of {@link AbstractEncoderMethodReturnValueHandler} that
+ * {@link #handleEncodedContent handles} encoded content by wrapping data buffers
+ * as RSocket payloads and by passing those through the {@link #RESPONSE_HEADER}
+ * header.
+ *
+ * @author Rossen Stoyanchev
+ * @since 5.2
+ */
+public class RSocketPayloadReturnValueHandler extends AbstractEncoderMethodReturnValueHandler {
+
+	/**
+	 * Message header name that is expected to have an {@link AtomicReference}
+	 * which will receive the {@code Flux<Payload>} that represents the response.
+	 */
+	public static final String RESPONSE_HEADER = "rsocketResponse";
+
+	public static final String RESPONSE_HEADER_HEADER = "rsocketResponseHeaders";
+
+	public RSocketPayloadReturnValueHandler(List<Encoder<?>> encoders, ReactiveAdapterRegistry registry) {
+		super(encoders, registry);
+	}
+
+	@Override
+	protected Mono<Void> handleEncodedContent(
+			Flux<DataBuffer> encodedContent, MethodParameter returnType, Message<?> message) {
+
+		AtomicReference<Flux<Payload>> responseRef = getResponseReference(message);
+		Assert.notNull(responseRef, "Missing '" + RESPONSE_HEADER + "'");
+
+		// TODO modify here
+		MessageHeaders messageHeaders = message.getHeaders();
+		Object headerValue = messageHeaders.get(RSocketRequesterMethodArgumentResolver.RSOCKET_REQUESTER_HEADER);
+
+		Assert.isInstanceOf(RSocketRequester.class, headerValue, "Expected header value of type RSocketRequester");
+		RSocketRequester requester = (RSocketRequester) headerValue;
+
+		// MimeType metadataMimeType, RSocketStrategies strategies
+		AtomicReference<List<Tuple2<MimeType, Object>>> val = (AtomicReference<List<Tuple2<MimeType, Object>>>)messageHeaders.get(RESPONSE_HEADER_HEADER);
+		List<Tuple2<MimeType, Object>> returnHeaders = val.get();
+
+		if(returnHeaders.isEmpty()) {
+			responseRef.set(encodedContent.map(PayloadUtils::createPayload));
+		} else {
+			MetadataEncoder encoder = new MetadataEncoder(requester.metadataMimeType(), requester.strategies());
+			for (Tuple2<MimeType, Object> header : returnHeaders) {
+				encoder.metadata(header.getT2(), header.getT1());
+			}
+
+			Mono<DataBuffer> headerDataBuffer = encoder.encode();
+
+			responseRef.set(headerDataBuffer.flatMapMany(metadata -> {
+				return encodedContent.index().map(tuple -> {
+					long idx = tuple.getT1();
+					DataBuffer data = tuple.getT2();
+					return (idx == 0) ? PayloadUtils.createPayload(data, metadata) : PayloadUtils.createPayload(data);
+				}).defaultIfEmpty(PayloadUtils.createPayload(null, metadata));
+			}));
+		}
+//		responseRef.set(Flux.zip(encodedContent, Flux.from(headerDataBuffer))
+//				.map(dataAndMetadata ->PayloadUtils.createPayload(dataAndMetadata.getT1(), dataAndMetadata.getT2())));
+//		responseRef.set(encodedContent.map(PayloadUtils::createPayload));
+		return Mono.empty();
+	}
+
+	protected Mono<Void> handleEncodedContent2(
+			Flux<Tuple2<Map<String, Any>, DataBuffer>> encodedContent, MethodParameter returnType, Message<?> message) {
+
+		AtomicReference<Flux<Payload>> responseRef = getResponseReference(message);
+		Assert.notNull(responseRef, "Missing '" + RESPONSE_HEADER + "'");
+
+		// TODO modify here
+		MessageHeaders messageHeaders = message.getHeaders();
+		Object headerValue = messageHeaders.get(RSocketRequesterMethodArgumentResolver.RSOCKET_REQUESTER_HEADER);
+
+		Assert.isInstanceOf(RSocketRequester.class, headerValue, "Expected header value of type RSocketRequester");
+		RSocketRequester requester = (RSocketRequester) headerValue;
+
+		responseRef.set(encodedContent.flatMap(tuple -> {
+			Map<String, Any> metadata = tuple.getT1();
+			DataBuffer data = tuple.getT2();
+			if(!metadata.isEmpty()) {
+				MetadataEncoder encoder = new MetadataEncoder(requester.metadataMimeType(), requester.strategies());
+				Context.RpcResponse rpcResponse = Context.RpcResponse.newBuilder().putAllMetadata(metadata).build();
+				encoder.metadata(rpcResponse, CarriesConstant.RESPONSE_METADATA_MIMETYPE);
+				Mono<DataBuffer> metadataData = encoder.encode();
+				return metadataData.map(m -> PayloadUtils.createPayload(data, m));
+			}
+			return Mono.just(PayloadUtils.createPayload(data));
+		}));
+
+//		responseRef.set(encodedContent.map(tuple -> {
+//			Map<String, Any> metadata = tuple.getT1();
+//			DataBuffer data = tuple.getT2();
+//			if(!metadata.isEmpty()) {
+//				MetadataEncoder encoder = new MetadataEncoder(requester.metadataMimeType(), requester.strategies());
+//				Context.RpcResponse rpcResponse = Context.RpcResponse.newBuilder().putAllMetadata(metadata).build();
+//				encoder.metadata(rpcResponse, MimeType.valueOf(WellKnownMimeType.APPLICATION_PROTOBUF.getString()));
+//				Mono<DataBuffer> metadataData = encoder.encode();
+//				return PayloadUtils.createPayload(data, metadataData);
+//			}
+//			return PayloadUtils.createPayload(data);
+//		}));
+
+		return Mono.empty();
+	}
+
+	protected Mono<Void> handleEncodedContent3(
+			Flux<Payload> encodedContent, MethodParameter returnType, Message<?> message) {
+		AtomicReference<Flux<Payload>> responseRef = getResponseReference(message);
+		Assert.notNull(responseRef, "Missing '" + RESPONSE_HEADER + "'");
+
+		// TODO modify here
+		MessageHeaders messageHeaders = message.getHeaders();
+		Object headerValue = messageHeaders.get(RSocketRequesterMethodArgumentResolver.RSOCKET_REQUESTER_HEADER);
+
+
+		responseRef.set(encodedContent);
+		return Mono.empty();
+	}
+
+	@Override
+	protected Mono<Void> handleNoContent(MethodParameter returnType, Message<?> message) {
+		AtomicReference<Flux<Payload>> responseRef = getResponseReference(message);
+		if (responseRef != null) {
+			responseRef.set(Flux.empty());
+		}
+		return Mono.empty();
+	}
+
+	@Nullable
+	@SuppressWarnings("unchecked")
+	private AtomicReference<Flux<Payload>> getResponseReference(Message<?> message) {
+		Object headerValue = message.getHeaders().get(RESPONSE_HEADER);
+		Assert.state(headerValue == null || headerValue instanceof AtomicReference, "Expected AtomicReference");
+		return (AtomicReference<Flux<Payload>>) headerValue;
+	}
+
+}

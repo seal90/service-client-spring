@@ -16,3 +16,17 @@ seal:
           hello-world:
             channel-config:
               address: 'dns:///127.0.0.1:50051'
+
+
+spring:
+  grpc:
+    client:
+      channel:
+        hello-world:
+          target: 'static:///127.0.0.1:50051'
+#      channels:
+#        hello-world:
+#          address: 'dns:///127.0.0.1:50051'
+#      default-channel: hello-world
+#      channel-defaults:
+#      defaultStubFactory:

@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import static io.github.seal90.serviceclient.grpc.protocoltypefactory.ProtocolTypeGrpcFactory.CHANNEL_NAME_KEY;
 import static io.github.seal90.serviceclient.grpc.protocoltypefactory.ProtocolTypeGrpcFactory.SERVICE_NAME_KEY;
 
@@ -21,6 +23,8 @@ import static io.github.seal90.serviceclient.grpc.protocoltypefactory.ProtocolTy
 @Slf4j
 @Configuration(proxyBeanMethods = false)
 public class CarriesByGrpcClientConfiguration {
+  public static final CallOptions.Key<Metadata> CLIENT_HEADER_REQUEST_KEY = CallOptions.Key.create("grpc.client.request.Metadata");
+  public static final CallOptions.Key<AtomicReference<Metadata>> CLIENT_HEADER_RESPONSE_KEY = CallOptions.Key.create("grpc.client.response.Metadata");
 
   @Bean
   @ServiceClientInterceptor
@@ -44,11 +48,19 @@ public class CarriesByGrpcClientConfiguration {
 
             headers.put(Metadata.Key.of("overlay-ns", Metadata.ASCII_STRING_MARSHALLER),
                 "test");
+            Metadata metadata = callOptions.getOption(CLIENT_HEADER_REQUEST_KEY);
+            if(metadata != null) {
+              headers.merge(metadata);
+            }
 
             super.start(new ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT>(
                 responseListener) {
               @Override
               public void onHeaders(Metadata headers) {
+                AtomicReference<Metadata> headerRef = callOptions.getOption(CLIENT_HEADER_RESPONSE_KEY);
+                if (headerRef != null) {
+                  headerRef.set(headers);
+                }
                 String value = headers.get(Metadata.Key.of("SERVER_TO_CLIENT_HEADER_KEY",
                     Metadata.ASCII_STRING_MARSHALLER));
                 log.info("--- client receive sever header SERVER_TO_CLIENT_HEADER_KEY : {}", value);

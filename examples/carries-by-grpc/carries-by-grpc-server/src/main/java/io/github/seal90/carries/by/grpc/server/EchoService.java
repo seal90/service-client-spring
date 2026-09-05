@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.github.seal90.carries.by.grpc.server.CarriesByGrpcServerConfiguration.SERVER_REQUEST_HEADER_KEY;
+import static io.github.seal90.carries.by.grpc.server.CarriesByGrpcServerConfiguration.SERVER_RESPONSE_HEADER_KEY;
+
 @Slf4j
 @Service
 public class EchoService extends EchoGrpc.EchoImplBase {
@@ -19,6 +22,10 @@ public class EchoService extends EchoGrpc.EchoImplBase {
     public void unaryEcho(EchoOuterClass.EchoRequest request,
                           StreamObserver<EchoOuterClass.EchoResponse> responseObserver) {
         log.info("unaryEcho request: {}", request);
+        Metadata requestMetadata = SERVER_REQUEST_HEADER_KEY.get();
+        for(String key : requestMetadata.keys()) {
+            log.info("header {}: {}", key, requestMetadata.get(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER)));
+        }
 //        EchoOuterClass.EchoResponse echoResponse = EchoOuterClass.EchoResponse.newBuilder().setMessage("unaryEcho").build();
 //        responseObserver.onNext(echoResponse);
 //        responseObserver.onCompleted();
@@ -38,6 +45,12 @@ public class EchoService extends EchoGrpc.EchoImplBase {
     public void serverStreamingEcho(EchoOuterClass.EchoRequest request,
                                      StreamObserver<EchoOuterClass.EchoResponse> responseObserver) {
         log.info("serverStreamingEcho request: {}", request);
+        Metadata requestMetadata = SERVER_REQUEST_HEADER_KEY.get();
+        for(String key : requestMetadata.keys()) {
+            log.info("header {}: {}", key, requestMetadata.get(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER)));
+        }
+        Metadata responseMetadata = SERVER_RESPONSE_HEADER_KEY.get();
+        responseMetadata.put(Metadata.Key.of("x-custom-response-header", Metadata.ASCII_STRING_MARSHALLER), "custom-response-value");
         EchoOuterClass.EchoResponse echoResponse = EchoOuterClass.EchoResponse.newBuilder().setMessage("unaryEcho").build();
         responseObserver.onNext(echoResponse);
         responseObserver.onNext(echoResponse);

@@ -8,21 +8,23 @@ import io.github.seal90.serviceclient.core.ServiceClient;
 import io.github.seal90.serviceclient.proto.HelloReply;
 import io.github.seal90.serviceclient.proto.HelloRequest;
 import io.github.seal90.serviceclient.proto.HelloWorldServiceGrpc;
-import io.grpc.Metadata;
-import io.grpc.Status;
-import io.grpc.StatusException;
-import io.grpc.StatusRuntimeException;
+import io.grpc.*;
 import io.grpc.stub.BlockingClientCall;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static io.github.seal90.carries.by.grpc.client.CarriesByGrpcClientConfiguration.*;
 
 @Slf4j
 @SpringBootApplication
@@ -50,28 +52,30 @@ public class CarriesByGrpcClientApplication {
 	@ServiceClient(protocol = "CARRIES_BY_GRPC", serviceName = "hello-world")
 	private EchoAsyncFacade echoAsyncFacade;
 
-
+	@Autowired
+	private SpringGrpcClientRun springGrpcClientRun;
 
 	@Bean
 	public CommandLineRunner runner() {
 		return args -> {
-			sayHelloCall();
+//			sayHelloCall();
+//
+//			unaryEchoAsyncFacadeCall();
+//
+//			unaryEchoCall();
+//			serverStreamingEchoCall();
+//			clientStreamingEchoCall();
+//			bidirectionalStreamingEchoCall();
+//
+//			unaryEchoBlockingV2Call();
+//			serverStreamingEchoBlockingV2Call();
+//			clientStreamingEchoBlockingV2Call();
+//			bidirectionalStreamingEchoBlockingV2Call();
+//
+//			unaryEchoFutureCall();
 
-			unaryEchoAsyncFacadeCall();
+			springGrpcClientRun.helloWorld();
 
-			unaryEchoCall();
-			serverStreamingEchoCall();
-			clientStreamingEchoCall();
-			bidirectionalStreamingEchoCall();
-
-			unaryEchoBlockingV2Call();
-			serverStreamingEchoBlockingV2Call();
-			clientStreamingEchoBlockingV2Call();
-			bidirectionalStreamingEchoBlockingV2Call();
-
-			unaryEchoFutureCall();
-
-			Thread.sleep(1000);
 			System.exit(0);
 		};
 	}
@@ -85,6 +89,8 @@ public class CarriesByGrpcClientApplication {
 	}
 
 	private void unaryEchoAsyncFacadeCall() {
+		CountDownLatch latch = new CountDownLatch(1);
+
 		EchoOuterClass.EchoRequest echoRequest = EchoOuterClass.EchoRequest.newBuilder().setMessage("unaryEcho").build();
 		StreamObserver<EchoOuterClass.EchoResponse> responseObserver = new StreamObserver<>(){
 
@@ -95,77 +101,118 @@ public class CarriesByGrpcClientApplication {
 
 			@Override
 			public void onError(Throwable throwable) {
-
+				latch.countDown();
 			}
 
 			@Override
 			public void onCompleted() {
-
+				latch.countDown();
 			}
 		};
 		echoAsyncFacade.unaryEcho(echoRequest, responseObserver);
+
+		try {
+			latch.await(5, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private void unaryEchoCall() {
+		CountDownLatch latch = new CountDownLatch(1);
+		AtomicReference<Metadata> headerRef = new AtomicReference<>();
+
 		EchoOuterClass.EchoRequest echoRequest = EchoOuterClass.EchoRequest.newBuilder().setMessage("unaryEcho").build();
 		StreamObserver<EchoOuterClass.EchoResponse> responseObserver = new StreamObserver<>(){
 
 			@Override
 			public void onNext(EchoOuterClass.EchoResponse echoResponse) {
+				Metadata metadata = headerRef.get();
+				for(String key : metadata.keys()) {
+					log.info("header {}: {}", key, metadata.get(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER)));
+				}
 				log.info("stub unaryEcho response: {}", echoResponse.getMessage());
 			}
 
 			@Override
 			public void onError(Throwable throwable) {
-
+				latch.countDown();
 			}
 
 			@Override
 			public void onCompleted() {
-
+				latch.countDown();
 			}
 		};
-		echoStub.unaryEcho(echoRequest, responseObserver);
-	}
+
+		Metadata metadata = new Metadata();
+		metadata.put(Metadata.Key.of("x-custom-header", Metadata.ASCII_STRING_MARSHALLER), "custom-value");
+		echoStub.withOption(CLIENT_HEADER_REQUEST_KEY, metadata).withOption(CLIENT_HEADER_RESPONSE_KEY, headerRef).unaryEcho(echoRequest, responseObserver);
+        try {
+            latch.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 	private void serverStreamingEchoCall() {
+		CountDownLatch latch = new CountDownLatch(1);
+		AtomicReference<Metadata> headerRef = new AtomicReference<>();
+
 		EchoOuterClass.EchoRequest echoRequest = EchoOuterClass.EchoRequest.newBuilder().setMessage("serverStreamingEcho").build();
 		StreamObserver<EchoOuterClass.EchoResponse> responseObserver = new StreamObserver<>(){
 
 			@Override
 			public void onNext(EchoOuterClass.EchoResponse echoResponse) {
+				Metadata metadata = headerRef.get();
+				for(String key : metadata.keys()) {
+					log.info("header {}: {}", key, metadata.get(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER)));
+				}
 				log.info("stub serverStreamingEcho response: {}", echoResponse.getMessage());
 			}
 
 			@Override
 			public void onError(Throwable throwable) {
-
+				latch.countDown();
 			}
 
 			@Override
 			public void onCompleted() {
-
+				latch.countDown();
 			}
 		};
-		echoStub.serverStreamingEcho(echoRequest, responseObserver);
+		echoStub.withOption(CLIENT_HEADER_RESPONSE_KEY, headerRef).serverStreamingEcho(echoRequest, responseObserver);
+
+		try {
+			latch.await(5, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private void clientStreamingEchoCall() {
+		CountDownLatch latch = new CountDownLatch(1);
+		AtomicReference<Metadata> headerRef = new AtomicReference<>();
+
 		StreamObserver<EchoOuterClass.EchoResponse> responseObserver = new StreamObserver<>(){
 
 			@Override
 			public void onNext(EchoOuterClass.EchoResponse echoResponse) {
+				Metadata metadata = headerRef.get();
+				for(String key : metadata.keys()) {
+					log.info("header {}: {}", key, metadata.get(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER)));
+				}
 				log.info("stub clientStreamingEcho response: {}", echoResponse.getMessage());
 			}
 
 			@Override
 			public void onError(Throwable throwable) {
-
+				latch.countDown();
 			}
 
 			@Override
 			public void onCompleted() {
-
+				latch.countDown();
 			}
 		};
 		StreamObserver<EchoOuterClass.EchoRequest> requestObserver = echoStub.clientStreamingEcho(responseObserver);
@@ -173,24 +220,37 @@ public class CarriesByGrpcClientApplication {
 		requestObserver.onNext(echoRequest);
 		requestObserver.onNext(echoRequest);
 		requestObserver.onCompleted();
+
+		try {
+			latch.await(5, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private void bidirectionalStreamingEchoCall() {
+		CountDownLatch latch = new CountDownLatch(1);
+		AtomicReference<Metadata> headerRef = new AtomicReference<>();
+
 		StreamObserver<EchoOuterClass.EchoResponse> responseObserver = new StreamObserver<>(){
 
 			@Override
 			public void onNext(EchoOuterClass.EchoResponse echoResponse) {
+				Metadata metadata = headerRef.get();
+				for(String key : metadata.keys()) {
+					log.info("header {}: {}", key, metadata.get(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER)));
+				}
 				log.info("stub bidirectionalStreamingEcho response: {}", echoResponse.getMessage());
 			}
 
 			@Override
 			public void onError(Throwable throwable) {
-
+				latch.countDown();
 			}
 
 			@Override
 			public void onCompleted() {
-
+				latch.countDown();
 			}
 		};
 		StreamObserver<EchoOuterClass.EchoRequest> requestObserver = echoStub.bidirectionalStreamingEcho(responseObserver);
@@ -198,6 +258,12 @@ public class CarriesByGrpcClientApplication {
 		requestObserver.onNext(echoRequest);
 		requestObserver.onNext(echoRequest);
 		requestObserver.onCompleted();
+
+		try {
+			latch.await(5, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private void unaryEchoBlockingV2Call() {

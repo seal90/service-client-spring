@@ -27,7 +27,8 @@ public class CarriesByGrpcTransactionManager extends AbstractPlatformTransaction
     @Override
     protected Object doGetTransaction() throws TransactionException {
         TransactionContext transactionContext = new TransactionContext();
-        Context.current().withValue(TRANSACTION_CONTEXT, transactionContext).attach();
+        Context context = Context.current().withValue(TRANSACTION_CONTEXT, transactionContext).attach();
+        transactionContext.setContext(context);
         return transactionContext;
     }
 
@@ -43,26 +44,36 @@ public class CarriesByGrpcTransactionManager extends AbstractPlatformTransaction
     @Override
     protected void doCommit(DefaultTransactionStatus status) throws TransactionException {
         TransactionContext transactionContext = transaction(status.getTransaction());
-        String transactionId = transactionContext.getTransactionId();
+        try {
+            String transactionId = transactionContext.getTransactionId();
 
-        Transaction.CommitRequest commitRequest = Transaction.CommitRequest.newBuilder().setId(transactionId).build();
-        carriesByGrpcTransaction.doCommit(commitRequest);
-        Context.current().withValue(TRANSACTION_CONTEXT, null).attach();
+            Transaction.CommitRequest commitRequest = Transaction.CommitRequest.newBuilder().setId(transactionId).build();
+            carriesByGrpcTransaction.doCommit(commitRequest);
+        } finally {
+            Context context = transactionContext.getContext();
+            Context.current().detach(context);
+        }
     }
 
     @Override
     protected void doRollback(DefaultTransactionStatus status) throws TransactionException {
         TransactionContext transactionContext = transaction(status.getTransaction());
-        String transactionId = transactionContext.getTransactionId();
+        try {
+            String transactionId = transactionContext.getTransactionId();
 
-        Transaction.RollbackRequest rollbackRequest = Transaction.RollbackRequest.newBuilder().setId(transactionId).build();
-        carriesByGrpcTransaction.doRollback(rollbackRequest);
-        Context.current().withValue(TRANSACTION_CONTEXT, null).attach();
+            Transaction.RollbackRequest rollbackRequest = Transaction.RollbackRequest.newBuilder().setId(transactionId).build();
+            carriesByGrpcTransaction.doRollback(rollbackRequest);
+        } finally {
+            Context context = transactionContext.getContext();
+            Context.current().detach(context);
+        }
+
     }
 
     @Data
     public static class TransactionContext {
         private String transactionId;
+        private Context context;
     }
 
     private TransactionContext transaction(Object transaction) {
